@@ -1,0 +1,26 @@
+name: Deploy to EC2
+
+on:
+  workflow_run:
+    workflows: ['Publish Docker Image']
+    types: [completed]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Stop the old container
+        run: docker stop ums-auth-asw-cicd:latest || true
+
+      - name: Delete the old container
+        run: docker rm ums-auth-asw-cicd:latest || true
+
+      - name: Delete the old image
+        run: docker rmi ${{secrets.DOCKER_HUB_USERNAME}}/ums-auth-asw-cicd:latest || true
+
+      - name: Pull the image from docker hub
+        run: docker pull ${{secrets.DOCKER_HUB_USERNAME}}/ums-auth-asw-cicd:latest || true
+
+      - name: Run the image
+        run: docker compose up -d
